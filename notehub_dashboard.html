@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Note-Hub Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+    }
+    .table-zone {
+      margin-bottom: 80px; /* pour laisser la place aux boutons */
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 20px 0;
+      background: #fff;
+      border: 1px solid #ccc;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #eee;
+    }
+    .btn-bar {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .btn-blue { background: #0000FF; }
+    .btn-red { background: #FF0000; }
+    .btn-green { background: #00CC00; }
+    /* Bottom bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: -100px;
+      left: 0;
+      right: 0;
+      background: #333;
+      color: #fff;
+      text-align: center;
+      padding: 15px;
+      transition: bottom 0.3s ease-in-out;
+    }
+    .bottom-bar.active {
+      bottom: 60px;
+    }
+    .bottom-bar button {
+      margin: 0 10px;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .bottom-bar .blue { background: #0000FF; color: #fff; }
+    .bottom-bar .red { background: #FF0000; color: #fff; }
+    /* Snackbar (message vert) */
+    .snackbar {
+      visibility: hidden;
+      min-width: 200px;
+      background-color: #00CC00;
+      color: #fff;
+      text-align: center;
+      border-radius: 4px;
+      padding: 12px;
+      position: fixed;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+    .snackbar.show {
+      visibility: visible;
+      animation: fadein 0.5s, fadeout 0.5s 2s;
+    }
+    @keyframes fadein {
+      from {bottom: 0; opacity: 0;}
+      to {bottom: 30px; opacity: 1;}
+    }
+    @keyframes fadeout {
+      from {bottom: 30px; opacity: 1;}
+      to {bottom: 0; opacity: 0;}
+    }
+  </style>
+</head>
+<body>
+  <h2>Note-Hub Dashboard</h2>
+  <div class="table-zone" id="tableZone"></div>
+
+  <!-- Boutons -->
+  <div class="btn-bar">
+    <button class="btn btn-blue" onclick="openBottomBar('add')">Ajouter</button>
+    <button class="btn btn-red" onclick="openBottomBar('delete')">Supprimer</button>
+    <button class="btn btn-green" onclick="showSnackbar()">Enregistrer</button>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="bottom-bar" id="bottomBar"></div>
+
+  <!-- Snackbar -->
+  <div id="snackbar">Enregistré</div>
+
+  <script>
+    let selectedTable = null;
+
+    function createTable() {
+      const tableZone = document.getElementById("tableZone");
+
+      // Créer tableau
+      const table = document.createElement("table");
+      table.onclick = () => { selectedTable = table; highlightTable(table); };
+
+      // En-tête
+      const header = table.insertRow();
+      const h1 = header.insertCell();
+      h1.contentEditable = "true";
+      h1.innerText = "Matière";
+      const h2 = header.insertCell();
+      h2.innerText = "Note";
+      const h3 = header.insertCell();
+      h3.innerText = "Preuve";
+
+      // Deux lignes par défaut
+      addRow(table);
+      addRow(table);
+
+      tableZone.appendChild(table);
+      return table;
+    }
+
+    function addRow(table) {
+      const row = table.insertRow();
+      const c1 = row.insertCell();
+      c1.contentEditable = "true";
+      c1.innerText = "composition";
+      const c2 = row.insertCell();
+      c2.contentEditable = "true";
+      c2.innerText = "insérez la note";
+      const c3 = row.insertCell();
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      c3.appendChild(fileInput);
+    }
+
+    function openBottomBar(mode) {
+      const bar = document.getElementById("bottomBar");
+      bar.innerHTML = "";
+
+      if (mode === "add") {
+        bar.innerHTML = `
+          <button class="blue" onclick="addLine()">Ajouter une ligne</button>
+          <button class="blue" onclick="addTable()">Ajouter un tableau</button>
+        `;
+      } else if (mode === "delete") {
+        bar.innerHTML = `
+          <button class="red" onclick="deleteLine()">Supprimer dernière ligne</button>
+          <button class="red" onclick="deleteTable()">Supprimer tableau</button>
+        `;
+      }
+      bar.classList.add("active");
+      setTimeout(() => bar.classList.remove("active"), 4000);
+    }
+
+    function addLine() {
+      if (selectedTable) {
+        addRow(selectedTable);
+      } else {
+        alert("Sélectionnez un tableau en cliquant dessus !");
+      }
+    }
+
+    function addTable() {
+      createTable();
+    }
+
+    function deleteLine() {
+      if (selectedTable && selectedTable.rows.length > 1) {
+        selectedTable.deleteRow(selectedTable.rows.length - 1);
+      }
+    }
+
+    function deleteTable() {
+      if (selectedTable) {
+        selectedTable.remove();
+        selectedTable = null;
+      }
+    }
+
+    function showSnackbar() {
+      const sb = document.getElementById("snackbar");
+      sb.className = "snackbar show";
+      setTimeout(() => sb.className = sb.className.replace("show", ""), 2500);
+    }
+
+    function highlightTable(table) {
+      document.querySelectorAll("table").forEach(t => t.style.border = "1px solid #ccc");
+      table.style.border = "2px solid #0000FF";
+    }
+
+    // Initialisation : créer 2 tableaux
+    createTable();
+    createTable();
+  </script>
+</body>
+</html>
